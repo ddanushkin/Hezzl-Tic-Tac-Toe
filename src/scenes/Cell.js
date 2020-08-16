@@ -1,17 +1,18 @@
 export class Cell extends Phaser.GameObjects.Sprite {
     constructor(config) {
+        const size = config.scene.game.config.width / 12;
         super(
             config.scene,
-            config.x * config.size + config.size,
-            config.y * config.size + config.size,
+            config.x * size + size,
+            config.y * size + size,
             config.spriteKey
         );
         config.scene.add.existing(this);
         this.setInteractive();
         this.setFrame(config.defaultState);
         this.once('pointerdown', () => this.setSign(config.scene));
-        this.displayWidth = config.size;
-        this.displayHeight = config.size;
+        this.displayWidth = size;
+        this.displayHeight = size;
         this.setOrigin(0.5, 0.5);
         this.row = config.y;
         this.col = config.x;

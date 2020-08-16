@@ -10,7 +10,7 @@ export class GamePlay extends Scene
 
     addCell(row, col, state)
     {
-        return new Cell({ scene: this, x: col, y: row, size: this.cellSize, defaultState: state, spriteKey: 'CellSprite' });
+        return new Cell({ scene: this, x: col, y: row, defaultState: state, spriteKey: 'CellSprite' });
     }
 
     initBoard()
@@ -97,32 +97,29 @@ export class GamePlay extends Scene
 
     create ()
     {
-        this.cellSize = this.game.config.width / 12;
-        this.board = this.initBoard();
-        this.activeCellsCount = 0;
         this.activeCellsBeforeExpand = 15;
+        this.activeCellsBeforeWinCheck = 9;
+
+        this.activeCellsCount = 0;
         this.boardExpanded = false;
         this.playerSign = Math.random() > 0.5 ? Cell.States().Ring : Cell.States().Cross; 
         this.isPlayerTurn = Math.random() > 0.5 ? false : true;
-        this.cameras.main.zoom = 2.0;
         this.minIndex = 3;
         this.maxIndex = 7;
+        this.cameras.main.zoom = 2.0;
+
+        this.board = this.initBoard();
 
         this.events.on('boardChange', (moveData) => {
             console.log('BoardChange!', moveData);
             this.activeCellsCount++;
-            if (this.activeCellsCount >= 9) //5 moves from player1 + 4 moves from player2, otherwise no need to check.
-                console.log('Check!', checkWin(moveData));
+            if (!this.boardExpanded && this.activeCellsCount > this.activeCellsBeforeExpand)
+                this.boardExpand();
+            if (this.activeCellsCount >= this.activeCellsBeforeWinCheck)
+                console.log('Check!', this.checkWin(moveData));
             this.playerSign = this.playerSign == Cell.States().Ring ? Cell.States().Cross : Cell.States().Ring;    
         });
     }
-
-    update ()
-    {
-        if (!this.boardExpanded && this.activeCellsCount > this.activeCellsBeforeExpand)
-            this.boardExpand();
-    }
-
 }
 
 export default GamePlay
