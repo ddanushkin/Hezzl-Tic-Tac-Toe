@@ -10,21 +10,29 @@ export class Cell extends Phaser.GameObjects.Sprite {
         config.scene.add.existing(this);
         this.setInteractive();
         this.setFrame(config.defaultState);
-        this.once('pointerdown', () => this.setSign(config.scene));
         this.displayWidth = size;
         this.displayHeight = size;
         this.setOrigin(0.5, 0.5);
         this.row = config.y;
         this.col = config.x;
+        this.scene = config.scene;
+        this.filled = false;
+        this.once('pointerdown', () => this.setSign(this.scene.playerSign));
+        this.on('pointerover', () => {
+            if (!this.filled && this.getSign() == Cell.States().Enabled)
+                this.setFrame(this.scene.playerSign);
+        });
+        this.on('pointerout', () => {
+            if (!this.filled && this.getSign() != Cell.States().Disabled)
+                this.setFrame(Cell.States().Enabled);
+        });
     }
 
-    setSign(scene) {
-        if (this.getSign() == Cell.States().Enabled) {
-            this.setFrame(scene.playerSign);
-            scene.events.emit('boardChange', {
-                position: this.getPosition(),
-                sign: this.getSign()
-            });
+    setSign(sign) {
+        if (!this.filled) {
+            this.filled = true;
+            this.setFrame(sign);
+            this.scene.events.emit('boardChange', sign);
         }
     }
 
@@ -36,19 +44,17 @@ export class Cell extends Phaser.GameObjects.Sprite {
         return { row: this.row, col: this.col };
     }
 
-    enable()
-    {
+    enable() {
         if (this.getSign() == Cell.States().Disabled)
             this.setFrame(Cell.States().Enabled);
     }
 
-    static States()
-    {
+    static States() {
         return {
             Disabled: 0,
-            Enabled:  1,
-            Ring:     2,
-            Cross:    3
+            Enabled: 1,
+            Ring: 2,
+            Cross: 3
         };
     }
 }
