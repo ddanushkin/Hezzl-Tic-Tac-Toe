@@ -75,7 +75,7 @@ export class GamePlay extends Scene {
                 if (cell.getSign() == sign) {
                     for (const direction of directions) {
                         if (this.checkWinInDirection(row, col, direction.Row, direction.Col, sign)) {
-                            this.drawWinLine(row, col, direction.Row, direction.Col);
+                            this.drawWinLine(row, col, direction.Row, direction.Col, sign);
                             return true;
                         }
                     }
@@ -160,7 +160,16 @@ export class GamePlay extends Scene {
         }
     }
 
-    drawWinLine(startRow, startCol, dRow, dCol)
+    gameOver(sign)
+    {
+        this.game.input.enabled = false;
+        setTimeout(() => {
+            this.game.input.enabled = true;
+            this.scene.start('GameOver', {isWin: sign == this.playerSign})
+        }, 1000);
+    }
+
+    drawWinLine(startRow, startCol, dRow, dCol, sign)
     {
         const endRow = startRow + (4 * dRow);
         const endCol = startCol + (4 * dCol);
@@ -169,7 +178,7 @@ export class GamePlay extends Scene {
         const endCell = this.board[endRow][endCol];
 
         const line = this.add.graphics();
-        line.lineStyle(16, 0xffe600, 0.5);
+        line.lineStyle(16, sign == this.playerSign ? 0xffe600 : 0xfc035a, 0.5);
         line.beginPath();
         line.moveTo(startCell.x, startCell.y);
         line.lineTo(endCell.x, endCell.y);
@@ -240,7 +249,7 @@ export class GamePlay extends Scene {
             this.isPlayerTurn = !this.isPlayerTurn;
             if (this.movesCount >= this.movesBeforeWinCheck && this.checkWin(sign))
             {
-                this.gameOver();
+                this.gameOver(sign);
                 return;
             }
             if (!this.boardExpanded && this.movesCount > this.movesBeforeExpand)
@@ -251,12 +260,6 @@ export class GamePlay extends Scene {
 
         if (!this.isPlayerTurn)
             this.aiMove();
-    }
-
-    gameOver()
-    {
-        this.game.input.enabled = false;
-        setTimeout(() => this.scene.restart(), 1000);
     }
 }
 
