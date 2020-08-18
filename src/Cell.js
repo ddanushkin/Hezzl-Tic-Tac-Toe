@@ -18,14 +18,20 @@ export class Cell extends Phaser.GameObjects.Sprite {
         this.scene = config.scene;
         this.filled = false;
         this.once('pointerdown', () => this.setSign(this.scene.playerSign));
-        this.on('pointerover', () => {
-            if (!this.filled && this.getSign() == Cell.States().Enabled)
-                this.setFrame(this.scene.playerSign);
-        });
-        this.on('pointerout', () => {
-            if (!this.filled && this.getSign() != Cell.States().Disabled)
-                this.setFrame(Cell.States().Enabled);
-        });
+        this.on('pointerover', () => this.onPointerOver());
+        this.on('pointerout', () => this.onPointerOut());
+    }
+
+    onPointerOver()
+    {
+        if (!this.filled && this.getSign() == Cell.States().Enabled)
+            this.setFrame(this.scene.playerSign);
+    }
+
+    onPointerOut()
+    {
+        if (!this.filled && this.getSign() != Cell.States().Disabled)
+            this.setFrame(Cell.States().Enabled);
     }
 
     setSign(sign) {
@@ -38,10 +44,6 @@ export class Cell extends Phaser.GameObjects.Sprite {
 
     getSign() {
         return this.frame.name;
-    }
-
-    getPosition() {
-        return { row: this.row, col: this.col };
     }
 
     enable() {

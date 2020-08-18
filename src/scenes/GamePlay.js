@@ -1,6 +1,7 @@
 import { Scene } from 'phaser'
 import { Cell } from '../Cell';
 import CellSprite from '../assets/CellSprite.png';
+import DrawSprite from '../assets/DrawSprite.png';
 
 const getRandomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
@@ -32,6 +33,7 @@ export class GamePlay extends Scene {
 
         this.cameras.main.zoom = 2.0;
         this.game.input.enabled = true;
+
         this.board = this.initBoard();
     }
 
@@ -43,7 +45,8 @@ export class GamePlay extends Scene {
         const board = Array.from(Array(11), () => new Array(11));
         for (let row = 0; row < 11; row++) {
             for (let col = 0; col < 11; col++) {
-                if ((row > 2 && row < 8) && (col > 2 && col < 8))
+                //Enable cells inside 5x5, Disable outside cells.
+                if ((row >= this.minIndex && row <= this.maxIndex) && (col >= this.minIndex && col <= this.maxIndex))
                     board[row][col] = this.addCell(row, col, Cell.States().Enabled);
                 else
                     board[row][col] = this.addCell(row, col, Cell.States().Disabled);
@@ -169,6 +172,14 @@ export class GamePlay extends Scene {
         }, 1000);
     }
 
+    gameDraw()
+    {
+        const centerX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        const centerY = this.cameras.main.worldView.y + this.cameras.main.height / 2;
+        this.add.sprite(centerX, centerY, 'DrawSprite');
+        setTimeout(() => {this.scene.restart()}, 1000);
+    }
+
     drawWinLine(startRow, startCol, dRow, dCol, sign)
     {
         const endRow = startRow + (4 * dRow);
@@ -187,7 +198,7 @@ export class GamePlay extends Scene {
     }
 
     getCheckDirections() {
-        const checkDirections = [
+        const directions = [
             { Row: 0, Col: 1 },
             { Row: 0, Col: -1 },
             { Row: 1, Col: 0 },
@@ -199,7 +210,7 @@ export class GamePlay extends Scene {
         ];
 
         //Shuffle an array  
-        return checkDirections.sort(() => Math.random() - 0.5);
+        return directions.sort(() => Math.random() - 0.5);
     }
 
     getRandomCell() {
@@ -236,28 +247,33 @@ export class GamePlay extends Scene {
         return this.isOutOfBoard(lastRowIndex, lastColIndex);
     }
 
+    onBoardChange(sign)
+    {
+        this.movesCount++;
+        this.isPlayerTurn = !this.isPlayerTurn;
+        if (this.movesCount >= this.movesBeforeWinCheck && this.checkWin(sign))
+            this.gameOver(sign);
+        if (this.movesCount >= 121)
+            this.gameDraw();
+        if (!this.boardExpanded && this.movesCount > this.movesBeforeExpand)
+            this.expandBoard();
+        if (!this.isPlayerTurn)
+            this.aiMove();
+    }
+
     preload() {
         this.load.spritesheet('CellSprite', CellSprite, { frameWidth: 64, frameHeight: 64, endFrame: 4 });
+        this.load.image('DrawSprite', DrawSprite);
     }
 
     create() {
         this.initScene();
 
+        //Event emited from Cell.setSign(). Need to off first, possible scene restart.
         this.events.off('boardChange');
-        this.events.on('boardChange', (sign) => {
-            this.movesCount++;
-            this.isPlayerTurn = !this.isPlayerTurn;
-            if (this.movesCount >= this.movesBeforeWinCheck && this.checkWin(sign))
-            {
-                this.gameOver(sign);
-                return;
-            }
-            if (!this.boardExpanded && this.movesCount > this.movesBeforeExpand)
-                this.expandBoard();
-            if (!this.isPlayerTurn)
-                this.aiMove();
-        });
+        this.events.on('boardChange', (sign) => this.onBoardChange(sign));
 
+        //First move from AI.
         if (!this.isPlayerTurn)
             this.aiMove();
     }

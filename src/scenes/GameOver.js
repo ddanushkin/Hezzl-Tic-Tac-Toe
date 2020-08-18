@@ -4,10 +4,9 @@ import ResultSprite from '../assets/ResultSprite.png';
 import WinParticleSprite from '../assets/WinParticleSprite.png';
 import LoseParticleSprite from '../assets/LoseParticleSprite.png';
 
-
 export class GameOver extends Scene {
     constructor() {
-        super({ key: 'GameOver', physics: {default: 'arcade'}})
+        super({ key: 'GameOver' })
     }
 
     init(data)
@@ -42,7 +41,7 @@ export class GameOver extends Scene {
 
         this.resultSprite = this.add.sprite(centerX, centerY - 100, 'ResultSprite').setOrigin(0.5, 0.5).setFrame(this.isWin ? 0 : 1);
 
-        this.restartButton = this.add.sprite(centerX, centerY, 'RestartButtonSprite')
+        this.restartButton = this.add.sprite(centerX, centerY, 'RestartButtonSprite');
         this.restartButton.setOrigin(0.5, 0.5);
         this.restartButton.setInteractive();
         this.restartButton.on('pointerdown', () => this.scene.start('GamePlay'));
